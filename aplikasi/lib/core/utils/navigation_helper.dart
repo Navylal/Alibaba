@@ -1,0 +1,31 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+class Nav {
+  static void toNamed(String route) {
+    Get.to(
+      () => GetPageRoute(
+        page: () => GetPage(
+          name: route,
+          page: () => _resolvePage(route),
+        ).page(),
+        transition: Transition.rightToLeft,
+        transitionDuration: const Duration(milliseconds: 350),
+      ),
+    );
+  }
+
+  static Widget _resolvePage(String route) {
+    // Manual resolver sementara (harus kamu isi sesuai route yang ada)
+    switch (route) {
+      case '/transaction':
+        return const Placeholder(); // Ganti dengan TransactionView()
+      case '/calculator':
+        return const Placeholder(); // Ganti dengan CalculatorView()
+      default:
+        return const Scaffold(
+          body: Center(child: Text('Page not found')),
+        );
+    }
+  }
+}
