@@ -20,8 +20,6 @@ class ApiServiceDio {
     final stopwatch = Stopwatch()..start();
     try {
       final response = await dio.get(baseUrl);
-
-      // Tambahkan ini biar aman untuk semua tipe data
       final data = response.data is String
           ? jsonDecode(response.data)
           : response.data;

@@ -17,12 +17,10 @@ class MyApp extends StatelessWidget {
       title: 'Alibaba Perfume Management',
       debugShowCheckedModeBanner: false,
 
-      // Gunakan routing dari GetX
       initialRoute: Routes.home,
-      initialBinding: HomeBinding(), // binding pertama kali
+      initialBinding: HomeBinding(),
       getPages: AppPages.pages,
 
-      // Optional: tema biar lebih konsisten
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,

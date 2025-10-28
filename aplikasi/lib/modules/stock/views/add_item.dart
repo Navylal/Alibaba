@@ -20,7 +20,6 @@ class _AddItemState extends State<AddItem> {
 
   String? selectedCategory;
 
-  // ✅ Hanya dua opsi kategori
   final List<String> categories = [
     "Perfume",
     "Ingredients",

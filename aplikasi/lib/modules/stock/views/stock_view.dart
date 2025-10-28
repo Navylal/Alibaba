@@ -66,7 +66,6 @@ class StockView extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // Category Tabs (All, Perfume, Ingredients)
             Obx(() => Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
@@ -82,7 +81,6 @@ class StockView extends StatelessWidget {
                 )),
             const SizedBox(height: 10),
 
-            // List Items
             Expanded(
               child: Obx(() {
                 if (controller.perfumes.isEmpty) {

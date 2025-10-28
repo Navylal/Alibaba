@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 /// Service API menggunakan library http
 class ApiServiceHttp {
   final String baseUrl =
-      'https://raw.githubusercontent.com/Navylal/API/refs/heads/main/parfume.json';
+      'https://raw.githubusercontent.com/Aswin712/API/refs/heads/main/http.json ';
 
   Future<List<dynamic>> fetchPerfumes() async {
     final stopwatch = Stopwatch()..start();
@@ -13,13 +13,13 @@ class ApiServiceHttp {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        print('[HTTP] ✅ Success in ${stopwatch.elapsedMilliseconds} ms');
+        print('[HTTP] Success in ${stopwatch.elapsedMilliseconds} ms');
         return data;
       } else {
         throw Exception('HTTP Error: ${response.statusCode}');
       }
     } catch (e) {
-      print('[HTTP] ❌ Error: $e');
+      print('[HTTP] Error: $e');
       rethrow;
     } finally {
       stopwatch.stop();
