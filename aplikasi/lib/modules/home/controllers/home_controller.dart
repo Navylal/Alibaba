@@ -16,11 +16,9 @@ class HomeController extends GetxController {
     stockController = Get.find<StockController>();
     txController = Get.find<TransactionController>();
 
-    // Update otomatis setiap ada perubahan stok atau transaksi
-    ever(stockController.perfumes, (_) => updateStockCount());
+    ever(stockController.items, (_) => updateStockCount());
     ever(txController.transactions, (_) => updateTodaySales());
 
-    // Jalankan pertama kali
     updateStockCount();
     updateTodaySales();
   }
@@ -31,8 +29,9 @@ class HomeController extends GetxController {
 
   void updateTodaySales() {
     final total = txController.transactions
-        .where((tx) => tx["type"] == "sale")
-        .fold<int>(0, (sum, tx) => sum + (tx["price"] as int? ?? 0));
+        .where((tx) => tx.type == "sale")
+        .fold<int>(0, (sum, tx) => sum + tx.price);
+
     todaySales.value = total.toString();
   }
 }

@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// Service API menggunakan library http
 class ApiServiceHttp {
   final String baseUrl =
-      'https://raw.githubusercontent.com/Aswin712/API/refs/heads/main/http.json ';
+      'https://raw.githubusercontent.com/Aswin712/API/refs/heads/main/http.json';
 
   Future<List<dynamic>> fetchPerfumes() async {
     final stopwatch = Stopwatch()..start();

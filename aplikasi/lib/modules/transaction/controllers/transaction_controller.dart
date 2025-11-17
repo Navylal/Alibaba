@@ -1,44 +1,69 @@
 import 'package:get/get.dart';
+import 'package:aplikasi/data/models/transaction_model.dart';
+import 'package:aplikasi/data/repositories/transaction_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TransactionController extends GetxController {
+  final repo = TransactionRepository();
+
+  RxList<TransactionModel> transactions = <TransactionModel>[].obs;
+  RxBool isLoading = false.obs;
+
   var selectedTab = "ALL".obs;
   var selectedIndex = RxnInt();
 
-  var transactions = <Map<String, dynamic>>[
-    {
-      "type": "sale",
-      "name": "Mykonos - Slow Living 50ml",
-      "price": 500000,
-      "customer": "Ilal",
-      "qty": 2,
-      "unit": 250000,
-      "date": "2025-10-01"
-    },
-    {
-      "type": "sale",
-      "name": "SAFF AND CO - SOTB 100ml",
-      "price": 500000,
-      "customer": "Rezky",
-      "qty": 2,
-      "unit": 250000,
-      "date": "2025-10-01"
-    },
-    {
-      "type": "purchase",
-      "name": "Mykonos - Slow Living",
-      "price": 200000,
-      "customer": "Dula",
-      "qty": 1,
-      "unit": 200000,
-      "date": "2025-10-01"
-    },
-  ].obs;
-
-  void addTransaction(Map<String, dynamic> newTx) {
-    transactions.insert(0, newTx);
+  @override
+  void onInit() {
+    loadTransactions();
+    super.onInit();
   }
 
-  int get todaySales => transactions
-      .where((tx) => tx["type"] == "sale")
-      .fold(0, (sum, tx) => sum + (tx["price"] as int));
+  Future<void> loadTransactions() async {
+    isLoading.value = true;
+
+    try {
+      final data = await repo.getAll();
+      transactions.value = data;
+    } catch (e) {
+      print("Error loadTransactions: $e");
+    }
+
+    isLoading.value = false;
+  }
+
+  Future<void> addTransaction({
+    required String type,
+    required String name,
+    required int qty,
+    required int unit,
+    required int price,
+    required int total,
+    required String customer,
+    required int paid,
+    required int change,
+  }) async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser!.id;
+
+      final trx = TransactionModel(
+        id: 0,
+        userId: uid,
+        type: type,
+        name: name,
+        qty: qty,
+        unit: unit,
+        price: price,
+        total: total,
+        customer: customer.isEmpty ? "-" : customer,
+        paid: paid,
+        change: change,
+        date: DateTime.now(),
+      );
+
+      await repo.addTransaction(trx);
+      await loadTransactions();
+    } catch (e) {
+      print("Error addTransaction: $e");
+    }
+  }
 }

@@ -1,75 +1,96 @@
 import 'package:get/get.dart';
-import 'package:aplikasi/data/api_service_http.dart';
-import 'package:aplikasi/data/api_service_dio.dart';
+import '../../../data/models/stock_item.dart';
+import '../../../data/repositories/stock_repository.dart';
 
 class StockController extends GetxController {
-  final httpService = ApiServiceHttp();
-  final dioService = ApiServiceDio();
+  final StockRepository _repo = StockRepository();
 
-  var perfumes = <Map<String, dynamic>>[].obs;
+  RxList<StockItem> items = <StockItem>[].obs;
+  RxList<StockItem> allItems = <StockItem>[].obs;
+
   var selectedCategory = "All".obs;
+  var searchQuery = "".obs;
+  var isLoading = false.obs;
 
-  var useDio = true.obs;
-
-  Future<void> loadPerfumesAll() async {
-    try {
-      final data = useDio.value
-          ? await dioService.fetchPerfumes()
-          : await httpService.fetchPerfumes();
-
-      perfumes.assignAll(List<Map<String, dynamic>>.from(data));
-      selectedCategory.value = "All";
-
-      Get.snackbar(
-        "Loaded",
-        "Loaded ${perfumes.length} items from ${useDio.value ? "Dio" : "HTTP"}",
-      );
-    } catch (e) {
-      Get.snackbar("Error", "Failed to load: $e");
-    }
+  @override
+  void onInit() {
+    super.onInit();
+    loadLocal();
   }
 
-  Future<void> loadPerfumesByCategory(String category) async {
-    try {
+  Future<void> loadLocal() async {
+    isLoading.value = true;
+    final data = await _repo.getLocalStocks();
+    allItems.assignAll(data);
+    applyFilters();
+    isLoading.value = false;
+  }
 
-      final dioData =
-          List<Map<String, dynamic>>.from(await dioService.fetchPerfumes());
-      final httpData =
-          List<Map<String, dynamic>>.from(await httpService.fetchPerfumes());
+  void applyFilters() {
+    List<StockItem> filtered = allItems.toList();
 
-      final combined = [...dioData, ...httpData]
-          .fold<Map<String, Map<String, dynamic>>>({}, (map, item) {
-        final key = "${item["name"]}_${item["brand"]}";
-        map[key] = item;
-        return map;
-      }).values.toList();
+    if (selectedCategory.value != "All") {
+      filtered =
+          filtered.where((item) => item.type == selectedCategory.value).toList();
+    }
 
-      final filtered = combined.where((item) {
-        final cat = (item["category"] ?? "").toString().toLowerCase();
-        return cat == category.toLowerCase();
+    if (searchQuery.value.isNotEmpty) {
+      final q = searchQuery.value.toLowerCase();
+      filtered = filtered.where((item) {
+        return item.name.toLowerCase().contains(q) ||
+            item.brand.toLowerCase().contains(q);
       }).toList();
-
-      perfumes.assignAll(filtered);
-      selectedCategory.value = category;
-
-      Get.snackbar(
-        "Category Loaded",
-        "Loaded ${perfumes.length} $category items (Dio + HTTP combined)",
-      );
-    } catch (e) {
-      Get.snackbar("Error", "Failed to load category: $e");
     }
+
+    items.assignAll(filtered);
   }
 
-  void addPerfume(Map<String, dynamic> perfume) => perfumes.add(perfume);
-  void updatePerfume(int index, Map<String, dynamic> updated) {
-    if (index >= 0 && index < perfumes.length) perfumes[index] = updated;
+  void searchItems(String query) {
+    searchQuery.value = query;
+    applyFilters();
   }
 
-  void deletePerfume(int index) {
-    if (index >= 0 && index < perfumes.length) perfumes.removeAt(index);
+  void changeCategory(String category) {
+    selectedCategory.value = category;
+    applyFilters();
   }
 
-  int get totalStock =>
-      perfumes.fold<int>(0, (sum, item) => sum + ((item["stock"] ?? 0) as num).toInt());
+  Future<void> addItem(StockItem item) async {
+    await _repo.addStock(item);
+    await loadLocal();
+  }
+
+  Future<void> updateItem(StockItem updated) async {
+    await _repo.updateStock(updated);
+    await loadLocal();
+  }
+
+  Future<void> deleteItem(String id) async {
+    await _repo.deleteStock(id);
+    await loadLocal();
+  }
+
+  int get totalStock {
+    return items.fold<int>(0, (sum, item) => sum + item.quantity);
+  }
+
+  Future<void> adjustStock({
+    required String perfumeName,
+    required int qty,
+    required bool isSale,
+  }) async {
+    final item = allItems.firstWhere(
+      (p) =>
+          "${p.brand} - ${p.name} ${p.volume}ml".toLowerCase() ==
+          perfumeName.toLowerCase(),
+      orElse: () => throw Exception("Item not found in stock list"),
+    );
+
+    int newStock = isSale ? (item.quantity - qty) : (item.quantity + qty);
+    if (newStock < 0) newStock = 0;
+
+    final updated = item.copyWith(quantity: newStock);
+
+    await updateItem(updated);
+  }
 }

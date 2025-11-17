@@ -16,12 +16,11 @@ class Nav {
   }
 
   static Widget _resolvePage(String route) {
-    // Manual resolver sementara (harus kamu isi sesuai route yang ada)
     switch (route) {
       case '/transaction':
-        return const Placeholder(); // Ganti dengan TransactionView()
+        return const Placeholder(); 
       case '/calculator':
-        return const Placeholder(); // Ganti dengan CalculatorView()
+        return const Placeholder(); 
       default:
         return const Scaffold(
           body: Center(child: Text('Page not found')),

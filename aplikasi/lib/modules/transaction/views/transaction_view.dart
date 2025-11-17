@@ -9,107 +9,106 @@ class TransactionView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<TransactionController>();
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Transaction"),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
+        elevation: 0,
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // ===== HEADER =====
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Transactions",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
                 ),
+
                 ElevatedButton.icon(
                   onPressed: () async {
-                    final newTx = await Navigator.of(context)
-                        .push<Map<String, dynamic>>(
+                    await Navigator.of(context).push(
                       PageRouteBuilder(
                         opaque: false,
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            const Dialog(
+                        pageBuilder: (_, __, ___) => const Dialog(
                           insetPadding: EdgeInsets.all(16),
                           backgroundColor: Colors.transparent,
                           child: NewItemPage(),
                         ),
-                        transitionsBuilder: (context, animation,
-                            secondaryAnimation, child) {
-                          final fade = Tween<double>(begin: 0, end: 1).animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOut,
-                            ),
-                          );
-                          return FadeTransition(opacity: fade, child: child);
+                        transitionsBuilder: (_, anim, __, child) {
+                          return FadeTransition(opacity: anim, child: child);
                         },
-                        transitionDuration: const Duration(milliseconds: 400),
+                        transitionDuration:
+                            const Duration(milliseconds: 300),
                       ),
                     );
-                    if (newTx != null) {
-                      controller.addTransaction(newTx);
-                    }
                   },
                   icon: const Icon(Icons.add),
                   label: const Text("New Item"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[600],
-                    foregroundColor: Colors.white,
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
 
-            // ===== SUMMARY =====
+            const SizedBox(height: 12),
+
             Obx(() {
               final totalSales = controller.transactions
-                  .where((tx) => tx["type"] == "sale")
-                  .fold<int>(0, (sum, tx) => sum + (tx["price"] as int));
+                  .where((tx) => tx.type == "sale")
+                  .fold<int>(0, (sum, tx) => sum + tx.price);
 
               return Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const CircleAvatar(
-                      backgroundColor: Colors.green,
+                    CircleAvatar(
+                      backgroundColor: cs.primary,
                       child: Text(
                         "RP",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: cs.onPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
+
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Today's Sales",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text("Today's Sales",
+                            style: TextStyle(
+                                color: cs.onPrimaryContainer,
+                                fontWeight: FontWeight.bold)),
                         Text(
                           "Rp $totalSales",
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontSize: 16,
+                          style: TextStyle(
+                            color: cs.primary,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               );
@@ -117,29 +116,35 @@ class TransactionView extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // ===== FILTER TABS =====
             Obx(() {
               final selectedTab = controller.selectedTab.value;
+
               return Container(
+                padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: cs.surfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: ["ALL", "SALE", "PURCHASE"].map((tab) {
                     bool active = selectedTab == tab;
+
                     return Expanded(
                       child: GestureDetector(
                         onTap: () => controller.selectedTab.value = tab,
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 250),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color:
-                                active ? Colors.white : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
+                            color: active ? cs.surface : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
                             boxShadow: active
-                                ? [const BoxShadow(color: Colors.black12, blurRadius: 4)]
+                                ? [
+                                    BoxShadow(
+                                      color: cs.shadow.withOpacity(0.15),
+                                      blurRadius: 4,
+                                    )
+                                  ]
                                 : [],
                           ),
                           alignment: Alignment.center,
@@ -147,7 +152,9 @@ class TransactionView extends StatelessWidget {
                             tab,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: active ? Colors.black : Colors.grey,
+                              color: active
+                                  ? cs.onSurface
+                                  : cs.onSurface.withOpacity(0.6),
                             ),
                           ),
                         ),
@@ -160,81 +167,101 @@ class TransactionView extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // ===== TRANSACTION LIST =====
             Expanded(
               child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final selected = controller.selectedTab.value;
+
                 final filtered = controller.transactions.where((tx) {
-                  if (controller.selectedTab.value == "ALL") return true;
-                  return tx["type"]
-                          .toString()
-                          .toUpperCase() ==
-                      controller.selectedTab.value;
+                  if (selected == "ALL") return true;
+                  if (selected == "SALE") return tx.type == "sale";
+                  if (selected == "PURCHASE") return tx.type == "purchase";
+                  return true;
                 }).toList();
 
                 return ListView.builder(
                   itemCount: filtered.length,
-                  itemBuilder: (context, index) {
+                  itemBuilder: (_, index) {
                     final tx = filtered[index];
-                    final type = tx["type"].toString();
-                    final isSale = type == "sale";
+                    final isSale = tx.type == "sale";
+
+                    final cardColor = isSale
+                        ? cs.primaryContainer.withOpacity(0.35)
+                        : cs.secondaryContainer.withOpacity(0.35);
+
+                    final tagColor =
+                        isSale ? cs.primary : cs.secondary;
 
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
+                      margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isSale ? Colors.green[50] : Colors.blue[50],
+                        color: cardColor,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black12, blurRadius: 3)
+                        boxShadow: [
+                          BoxShadow(
+                            color: cs.shadow.withOpacity(0.12),
+                            blurRadius: 4,
+                          )
                         ],
                       ),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CircleAvatar(
-                            backgroundColor:
-                                isSale ? Colors.green : Colors.blue,
-                            child: const Text("RP"),
+                            backgroundColor: tagColor,
+                            child: Text(
+                              "RP",
+                              style: TextStyle(
+                                color: cs.onPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 10),
+
+                          const SizedBox(width: 12),
+
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text(tx.name,
+                                    style: TextStyle(
+                                        color: cs.onSurface,
+                                        fontWeight: FontWeight.bold)),
                                 Text(
-                                  tx["name"].toString(),
-                                  style: const TextStyle(
+                                  "Rp ${tx.price}",
+                                  style: TextStyle(
+                                      color: tagColor,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                Text(
-                                  "Rp ${tx["price"].toString()}",
-                                  style: TextStyle(
-                                    color: isSale
-                                        ? Colors.green
-                                        : Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
                                 const SizedBox(height: 4),
-                                Text("Customer: ${tx["customer"]}"),
-                                Text("Unit: Rp ${tx["unit"]}"),
-                                Text("Qty: ${tx["qty"]}"),
-                                Text("Date: ${tx["date"]}"),
+                                Text("Customer: ${tx.customer}",
+                                    style: TextStyle(color: cs.onSurface)),
+                                Text("Unit: Rp ${tx.unit}",
+                                    style: TextStyle(color: cs.onSurface)),
+                                Text("Qty: ${tx.qty}",
+                                    style: TextStyle(color: cs.onSurface)),
+                                Text(
+                                    "Date: ${tx.date.toLocal().toString().split(" ")[0]}",
+                                    style: TextStyle(color: cs.onSurface)),
                               ],
                             ),
                           ),
+
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                                horizontal: 12, vertical: 4),
                             decoration: BoxDecoration(
-                              color: (isSale ? Colors.green : Colors.blue)
-                                  .withOpacity(0.2),
+                              color: tagColor.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              type.toUpperCase(),
+                              tx.type.toUpperCase(),
                               style: TextStyle(
-                                color: isSale ? Colors.green : Colors.blue,
+                                color: tagColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
