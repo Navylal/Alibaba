@@ -74,7 +74,7 @@ class _EditTransactionViewState extends State<EditTransactionView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // DELETE BUTTON
+
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: cs.error,
@@ -89,7 +89,6 @@ class _EditTransactionViewState extends State<EditTransactionView> {
                   child: const Text("DELETE"),
                 ),
 
-                // SAVE BUTTON
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: cs.primary,
@@ -120,9 +119,6 @@ class _EditTransactionViewState extends State<EditTransactionView> {
     );
   }
 
-  // ============================================================
-  // FIELD GENERATOR DENGAN WARNA OTOMATIS (DARK/LIGHT MODE)
-  // ============================================================
   Widget _field(String label, TextEditingController c,
       {bool number = false}) {
     final cs = Theme.of(context).colorScheme;
@@ -137,7 +133,7 @@ class _EditTransactionViewState extends State<EditTransactionView> {
           labelText: label,
           labelStyle: TextStyle(color: cs.onSurfaceVariant),
           filled: true,
-          fillColor: cs.surfaceVariant, // 🔥 mendukung light & dark theme
+          fillColor: cs.surfaceVariant,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(color: cs.outline.withOpacity(0.3)),
