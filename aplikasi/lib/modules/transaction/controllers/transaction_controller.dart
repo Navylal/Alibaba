@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:aplikasi/data/models/transaction_model.dart';
 import 'package:aplikasi/data/repositories/transaction_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../views/edit_transaction_view.dart';
+import 'package:flutter/material.dart';
 
 class TransactionController extends GetxController {
   final repo = TransactionRepository();
@@ -65,5 +67,49 @@ class TransactionController extends GetxController {
     } catch (e) {
       print("Error addTransaction: $e");
     }
+  }
+
+  Future<void> updateTransaction({
+    required int id,
+    required String name,
+    required int qty,
+    required int unit,
+    required int price,
+    required String customer,
+    required int paid,
+    required int change,
+  }) async {
+    try {
+      await repo.updateTransaction(
+        id: id,
+        name: name,
+        qty: qty,
+        unit: unit,
+        price: price,
+        customer: customer,
+        paid: paid,
+        change: change,
+      );
+
+      await loadTransactions();
+    } catch (e) {
+      print("Error updateTransaction: $e");
+    }
+  }
+
+  Future<void> deleteTransaction(int id) async {
+    try {
+      await repo.deleteTransaction(id);
+      await loadTransactions();
+    } catch (e) {
+      print("Error deleteTransaction: $e");
+    }
+  }
+
+  void openEditPage(BuildContext context, TransactionModel trx) {
+    showDialog(
+      context: context,
+      builder: (_) => EditTransactionView(trx: trx),
+    );
   }
 }
